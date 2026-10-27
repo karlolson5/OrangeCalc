@@ -27,17 +27,17 @@ belt_allowable_tooth_counts = [95, 100, 105]
 desired_c2c_min_in = 7.75
 desired_c2c_max_in = 8.25
 
-# A slot built at center distance X accepts a config if
+# A designed center distance X accepts a config if
 #   X - tight <= config c2c <= X + loose
 belt_c2c_tolerance_tight_in = 0.003
 belt_c2c_tolerance_loose_in = 0.01
 
 # A set must contain a ratio <= the first and a ratio >= the second.
 # With both at 1, any set passes (a 1:1 config satisfies both).
-must_include_ratio_below = 1
-must_include_ratio_above = 1
+must_include_ratio_below = 0.8
+must_include_ratio_above = 1.9
 
-num_groups_to_print = 5
+max_groups_to_suggest = 5
 
 _EPS = 1e-9  # float calculation wiggle room
 
@@ -74,21 +74,21 @@ class ConfigurationGroup:
     unique_ratio_count: int
     c2c_min_in: float
     c2c_max_in: float
-    slot_c2c_min_in: float  # feasible range for the slot center distance X
-    slot_c2c_max_in: float
+    designed_c2c_min_in: float  # feasible range for the designed center distance X
+    designed_c2c_max_in: float
     P1_used: list[int]
     P2_used: list[int]
     belts_used: list[int]
 
     @property
-    def slot_c2c_mid_in(self) -> float:
-        return (self.slot_c2c_min_in + self.slot_c2c_max_in) / 2
+    def designed_c2c_mid_in(self) -> float:
+        return (self.designed_c2c_min_in + self.designed_c2c_max_in) / 2
 
     def __str__(self) -> str:
         cfg_lines = "\n".join(f"        {c}" for c in self.configurations)
         return (
-            f"Slot c2c:        {self.slot_c2c_mid_in:.3f} "
-            f"(feasible {self.slot_c2c_min_in:.3f} - {self.slot_c2c_max_in:.3f})\n"
+            f"Designed c2c:    {self.designed_c2c_mid_in:.3f} "
+            f"(feasible {self.designed_c2c_min_in:.3f} - {self.designed_c2c_max_in:.3f})\n"
             f"Unique Ratios:   {self.unique_ratio_count} "
             f"({len(self.configurations)} total configurations)\n"
             f"Ratio range:     {self.ratio_min:.2f} - {self.ratio_max:.2f}\n"
@@ -159,8 +159,8 @@ def build_group(members: list[Configuration]) -> ConfigurationGroup:
         unique_ratio_count=len({c.ratio_exact for c in members}),
         c2c_min_in=c2c_min,
         c2c_max_in=c2c_max,
-        slot_c2c_min_in=c2c_max - belt_c2c_tolerance_loose_in,
-        slot_c2c_max_in=c2c_min + belt_c2c_tolerance_tight_in,
+        designed_c2c_min_in=c2c_max - belt_c2c_tolerance_loose_in,
+        designed_c2c_max_in=c2c_min + belt_c2c_tolerance_tight_in,
         P1_used=sorted({c.pulley1_teeth for c in members}),
         P2_used=sorted({c.pulley2_teeth for c in members}),
         belts_used=sorted({c.belt_teeth for c in members}),
@@ -168,7 +168,7 @@ def build_group(members: list[Configuration]) -> ConfigurationGroup:
 
 
 def find_maximal_groups(configs: list[Configuration]) -> list[ConfigurationGroup]:
-    """Every maximal set of configs that one slot can accommodate.
+    """Every maximal set of configs that one designed can accommodate.
 
     configs must be sorted by c2c. All members of a group must have c2c within
     a window of width (tight + loose). Maximal windows can always be taken to
@@ -208,7 +208,7 @@ def rank_key(g: ConfigurationGroup):
 def main():
     configs = find_legal_configurations()
     groups = sorted(find_maximal_groups(configs), key=rank_key, reverse=True)
-    for n, g in enumerate(groups[:num_groups_to_print], start=1):
+    for n, g in enumerate(groups[:max_groups_to_suggest], start=1):
         print(f"==========  Proposed Configuration Set {n}  ==========")
         print(g)
 
