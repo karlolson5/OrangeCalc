@@ -75,7 +75,7 @@ def main():
             continue
         if group_configurations[-1].ratio < must_include_ratio_above:
             continue
-        print(f"For designed c2c: {c2c:.3f}:")
+        print(f"\nFor designed c2c: {c2c:.3f}:")
         for c in group_configurations:
             print(c)
     
