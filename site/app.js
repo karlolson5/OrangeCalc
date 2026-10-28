@@ -169,7 +169,7 @@ async function buildPanel(tool) {
     }
     inputs[f.name] = input;
     form.append(el("label", { className: "field" },
-      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated; empty = use min/max)" }) : ""),
+      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated)" }) : ""),
       input));
   }
 
