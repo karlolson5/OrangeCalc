@@ -37,7 +37,7 @@ chains = [
 # True: one slot may be shared by #25 and #35 configs in the same set
 # (swap sprockets and chain together). False: sets never mix chain types.
 allow_mixed_chain_types = False
-allowed_chain_types = ["#25", "#35"]
+allowed_chain_types = [0, 1]
 
 desired_c2c_min_in = 7.75
 desired_c2c_max_in = 8.25
@@ -171,7 +171,7 @@ def calculate_wrap_deg(chain: ChainSpec, c2c_in: float, n1: int, n2: int) -> flo
 # ---------------------------------------------------------------------------
 def find_legal_configurations() -> list[Configuration]:
     configs = []
-    for chain in [c for c in chains if c.name in allowed_chain_types]:
+    for chain in [chains[t] for t in allowed_chain_types]:
         for n1 in chain.sprocket1_allowable_tooth_counts:
             for n2 in chain.sprocket2_allowable_tooth_counts:
                 for links in chain.link_counts:
