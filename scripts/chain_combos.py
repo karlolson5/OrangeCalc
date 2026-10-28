@@ -21,16 +21,16 @@ chains = [
     ChainSpec(
         name="#25",
         pitch_in=0.25,
-        sprocket1_allowable_tooth_counts=[10, 12, 14, 15, 16, 18, 20, 22, 24],
-        sprocket2_allowable_tooth_counts=[15, 18, 20, 24, 28, 30, 36],
-        link_counts=list(range(40, 161, 2)),
+        sprocket1_allowable_tooth_counts=[10, 12, 14, 16, 17, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36],
+        sprocket2_allowable_tooth_counts=[12, 14, 16, 17, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36],
+        link_counts=list(range(0, 300, 2)),
     ),
     ChainSpec(
         name="#35",
         pitch_in=0.375,
-        sprocket1_allowable_tooth_counts=[10, 12, 14, 15, 16, 18, 20],
-        sprocket2_allowable_tooth_counts=[15, 18, 20, 24, 28, 30, 36],
-        link_counts=list(range(30, 121, 2)),
+        sprocket1_allowable_tooth_counts=[9, 12, 15, 18],
+        sprocket2_allowable_tooth_counts=[18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 84],
+        link_counts=list(range(0, 200, 2)),
     ),
 ]
 
