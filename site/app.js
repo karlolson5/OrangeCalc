@@ -1,58 +1,84 @@
 // Add/rename tools here. `file` is relative to the site root (the workflow copies scripts/ there).
+// `hide` lists constants that should not get an input.
 const TOOLS = [
-  { id: "belt", title: "Belt Combos", file: "scripts/belt_combos.py" },
-  { id: "chain", title: "Tool 2", file: "scripts/chain_combos.py" },
-  { id: "gear", title: "Tool 3", file: "scripts/gear_combos.py" },
+  { id: "belt",  title: "Belt",  file: "scripts/belt_combos.py",  hide: ["MM_PER_IN"] },
+  { id: "chain", title: "Chain", file: "scripts/chain_combos.py", hide: [] },
+  { id: "gear",  title: "Gear",  file: "scripts/gear_combos.py",  hide: [] },
 ];
 
 // Python helper: loads a script as a module, discovers its config constants
-// (top-level assignments before the first def/class), and runs main() with overrides.
+// (every public top-level variable that is a number, bool, string, list of numbers,
+// or list of dataclass instances), and runs main() with overrides.
 const HELPER = `
-import ast, io, json, sys, types, contextlib, traceback
+import json, io, sys, types, contextlib, traceback, dataclasses, re
 
-_mods, _kinds = {}, {}
+_mods, _kinds, _dc = {}, {}, {}
+
+def _is_num(x):
+    return isinstance(x, (int, float)) and not isinstance(x, bool)
+
+def _norm(v):
+    return list(v) if isinstance(v, range) else v
+
+def _kind(v):
+    if isinstance(v, bool): return "bool"
+    if isinstance(v, int): return "int"
+    if isinstance(v, float): return "float"
+    if isinstance(v, str): return "str"
+    if isinstance(v, (list, tuple)) and v and all(_is_num(x) for x in v):
+        return "list_int" if all(isinstance(x, int) for x in v) else "list_float"
+    return None
+
+def _field(name, kind, v):
+    return {"name": name, "kind": kind, "value": list(v) if kind.startswith("list_") else v}
 
 def load(source, key):
-    tree = ast.parse(source)
-    names = []
-    for node in tree.body:
-        if isinstance(node, (ast.FunctionDef, ast.ClassDef)):
-            break
-        if isinstance(node, ast.Assign):
-            for t in node.targets:
-                if isinstance(t, ast.Name) and not t.id.startswith("_") and t.id not in names:
-                    names.append(t.id)
-
-    mod = types.ModuleType("user_script_" + key.replace("/", "_").replace(".", "_"))
-    sys.modules[mod.__name__] = mod
+    modname = "user_script_" + re.sub(r"\\W", "_", key)
+    mod = types.ModuleType(modname)
+    sys.modules[modname] = mod
     exec(compile(source, key, "exec"), mod.__dict__)
 
-    def is_num(x):
-        return isinstance(x, (int, float)) and not isinstance(x, bool)
-
     fields = []
-    for n in names:
-        v = getattr(mod, n, None)
-        if isinstance(v, range):
-            v = list(v)
-        if is_num(v):
-            fields.append({"name": n, "kind": "float" if isinstance(v, float) else "int", "value": v})
-        elif isinstance(v, (list, tuple)) and v and all(is_num(x) for x in v):
-            kind = "int" if all(isinstance(x, int) for x in v) else "float"
-            fields.append({"name": n, "kind": "list_" + kind, "value": list(v)})
+    _dc[key] = {}
+    for name, v in list(vars(mod).items()):
+        if name.startswith("_"):
+            continue
+        v = _norm(v)
+        k = _kind(v)
+        if k:
+            fields.append(_field(name, k, v))
+        elif (isinstance(v, list) and v
+              and all(dataclasses.is_dataclass(x) and not isinstance(x, type) for x in v)):
+            _dc[key][name] = list(v)
+            for i, item in enumerate(v):
+                for f in dataclasses.fields(item):
+                    fv = _norm(getattr(item, f.name))
+                    fk = _kind(fv)
+                    if fk:
+                        fields.append(_field(f"{name}[{i}].{f.name}", fk, fv))
     _mods[key] = mod
     _kinds[key] = {f["name"]: f["kind"] for f in fields}
     return json.dumps(fields)
 
+_cast = {
+    "int": int, "float": float, "bool": bool, "str": str,
+    "list_int": lambda l: [int(x) for x in l],
+    "list_float": lambda l: [float(x) for x in l],
+}
+
 def run(key, overrides_json):
     mod = _mods[key]
-    for name, v in json.loads(overrides_json).items():
-        kind = _kinds[key][name]
-        if kind == "int": v = int(v)
-        elif kind == "float": v = float(v)
-        elif kind == "list_int": v = [int(x) for x in v]
-        elif kind == "list_float": v = [float(x) for x in v]
-        setattr(mod, name, v)
+    nested = {}
+    for n, v in json.loads(overrides_json).items():
+        v = _cast[_kinds[key][n]](v)
+        m = re.fullmatch(r"(\\w+)\\[(\\d+)\\]\\.(\\w+)", n)
+        if m:
+            nested.setdefault((m[1], int(m[2])), {})[m[3]] = v
+        else:
+            setattr(mod, n, v)
+    for name, items in _dc[key].items():
+        setattr(mod, name, [dataclasses.replace(it, **nested.get((name, i), {}))
+                            for i, it in enumerate(items)])
     buf = io.StringIO()
     try:
         with contextlib.redirect_stdout(buf):
@@ -80,7 +106,12 @@ function el(tag, props = {}, ...children) {
   return e;
 }
 
-function parseField(f, raw) {
+const isList = f => f.kind.startsWith("list_");
+
+function parseField(f, input) {
+  if (f.kind === "bool") return input.checked;
+  const raw = input.value;
+  if (f.kind === "str") return raw;
   const isInt = f.kind.endsWith("int");
   const parseOne = s => {
     const n = Number(s);
@@ -88,12 +119,26 @@ function parseField(f, raw) {
     if (isInt && !Number.isInteger(n)) throw new Error(`${f.name}: "${s}" must be an integer`);
     return n;
   };
-  if (f.kind.startsWith("list_")) {
+  if (isList(f)) {
     const parts = raw.split(",").map(s => s.trim()).filter(s => s !== "");
     if (!parts.length) throw new Error(`${f.name}: list is empty`);
     return parts.map(parseOne);
   }
   return parseOne(raw.trim());
+}
+
+function setInput(f, input) {
+  if (f.kind === "bool") input.checked = f.value;
+  else input.value = isList(f) ? f.value.join(", ") : String(f.value);
+}
+
+function makeInput(f) {
+  let input;
+  if (f.kind === "bool") input = el("input", { type: "checkbox" });
+  else if (f.kind === "str" || isList(f)) input = el("input", { type: "text" });
+  else input = el("input", { type: "number", step: f.kind === "int" ? "1" : "any" });
+  setInput(f, input);
+  return input;
 }
 
 async function buildPanel(tool) {
@@ -113,19 +158,19 @@ async function buildPanel(tool) {
     return;
   }
 
+  // Hidden constants are not shown or sent, so the script's own value is used.
+  fields = fields.filter(f => !(tool.hide || []).includes(f.name));
+
   const inputs = {};
   const form = el("div");
   for (const f of fields) {
-    const isList = f.kind.startsWith("list_");
-    const input = el("input", {
-      type: isList ? "text" : "number",
-      value: isList ? f.value.join(", ") : String(f.value),
-    });
-    if (!isList) input.step = "any";
-    input.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+    const input = makeInput(f);
+    if (f.kind !== "bool") {
+      input.addEventListener("keydown", e => { if (e.key === "Enter") run(); });
+    }
     inputs[f.name] = input;
     form.append(el("label", { className: "field" },
-      el("span", {}, f.name, isList ? el("small", { textContent: "  (comma-separated)" }) : ""),
+      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated)" }) : ""),
       input));
   }
 
@@ -136,7 +181,7 @@ async function buildPanel(tool) {
     error.textContent = "";
     try {
       const vals = {};
-      for (const f of fields) vals[f.name] = parseField(f, inputs[f.name].value);
+      for (const f of fields) vals[f.name] = parseField(f, inputs[f.name]);
       output.textContent = "Running...";
       await new Promise(r => setTimeout(r, 20)); // let the browser paint first
       const py = await getPyodide();
@@ -150,9 +195,7 @@ async function buildPanel(tool) {
   }
 
   function reset() {
-    for (const f of fields) {
-      inputs[f.name].value = f.kind.startsWith("list_") ? f.value.join(", ") : String(f.value);
-    }
+    for (const f of fields) setInput(f, inputs[f.name]);
     run();
   }
 

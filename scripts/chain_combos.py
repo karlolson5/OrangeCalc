@@ -25,13 +25,13 @@ chains = [
         sprocket2_allowable_tooth_counts=[15, 18, 20, 24, 28, 30, 36],
         link_counts=list(range(40, 161, 2)),
     ),
-    # ChainSpec(
-    #     name="#35",
-    #     pitch_in=0.375,
-    #     sprocket1_allowable_tooth_counts=[10, 12, 14, 15, 16, 18, 20],
-    #     sprocket2_allowable_tooth_counts=[15, 18, 20, 24, 28, 30, 36],
-    #     link_counts=list(range(30, 121, 2)),
-    # ),
+    ChainSpec(
+        name="#35",
+        pitch_in=0.375,
+        sprocket1_allowable_tooth_counts=[10, 12, 14, 15, 16, 18, 20],
+        sprocket2_allowable_tooth_counts=[15, 18, 20, 24, 28, 30, 36],
+        link_counts=list(range(30, 121, 2)),
+    ),
 ]
 
 # True: one slot may be shared by #25 and #35 configs in the same set
