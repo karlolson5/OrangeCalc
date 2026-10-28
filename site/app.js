@@ -1,8 +1,8 @@
 // Add/rename tools here. `file` is relative to the site root (the workflow copies scripts/ there).
 const TOOLS = [
-  { id: "tool1", title: "Tool 1", file: "scripts/tool1.py" },
-  { id: "tool2", title: "Tool 2", file: "scripts/tool2.py" },
-  { id: "tool3", title: "Tool 3", file: "scripts/tool3.py" },
+  { id: "belt", title: "Belt Combos", file: "scripts/belt_combos.py" },
+  { id: "chain", title: "Tool 2", file: "scripts/chain_combos.py" },
+  { id: "gear", title: "Tool 3", file: "scripts/gear_combos.py" },
 ];
 
 // Python helper: loads a script as a module, discovers its config constants
