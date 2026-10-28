@@ -13,13 +13,13 @@ gear2_allowable_tooth_counts = [18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 
 # Desired center distance in DP units, i.e. c2c_in * DP = (N1 + N2) / 2.
 # Inclusive on both ends. At DP 20 this is 1.5 - 2.0 in.
 # Only integer DP spacings are used, so N1 + N2 must be even.
-desired_c2c_min_dp = 66
-desired_c2c_max_dp = 70
+desired_c2c_min_dp = 33
+desired_c2c_max_dp = 35
 
 # A set must contain a ratio <= the first and a ratio >= the second.
 # With both at 1, any set passes (a 1:1 config satisfies both).
-must_include_ratio_below = 1
-must_include_ratio_above = 1
+must_include_ratio_below = 1000
+must_include_ratio_above = 0
 
 num_groups_to_print = 5
 

@@ -54,8 +54,8 @@ min_wrap_deg = 120  # min wrap around smaller sprocket
 
 # A set must contain a ratio <= the first and a ratio >= the second.
 # With both at 1, any set passes (a 1:1 config satisfies both).
-must_include_ratio_below = 1
-must_include_ratio_above = 1
+must_include_ratio_below = 1000
+must_include_ratio_above = 0
 
 num_groups_to_print = 5
 

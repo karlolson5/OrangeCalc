@@ -31,8 +31,8 @@ belt_c2c_tolerance_loose_in = 0.01
 
 # A set must contain a ratio <= the first and a ratio >= the second.
 # With both at 1, any set passes (a 1:1 config satisfies both).
-must_include_ratio_below = 0.8
-must_include_ratio_above = 1.9
+must_include_ratio_below = 1000
+must_include_ratio_above = 0
 
 max_groups_to_suggest = 5
 
