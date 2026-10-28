@@ -10,7 +10,7 @@ const TOOLS = [
 // (every public top-level variable that is a number, bool, string, list of numbers,
 // or list of dataclass instances), and runs main() with overrides.
 const HELPER = `
-import json, io, sys, types, contextlib, traceback, dataclasses, re
+import json, io, sys, types, contextlib, traceback, dataclasses, re, ast, tokenize
 
 _mods, _kinds, _dc = {}, {}, {}
 
@@ -31,6 +31,33 @@ def _kind(v):
 
 def _field(name, kind, v):
     return {"name": name, "kind": kind, "value": list(v) if kind.startswith("list_") else v}
+
+def _trailing_comments(source):
+    """line number -> comment text, for comments that follow code on the same line."""
+    out = {}
+    lines = source.splitlines()
+    try:
+        for tok in tokenize.generate_tokens(io.StringIO(source).readline):
+            if tok.type == tokenize.COMMENT:
+                row, col = tok.start
+                if lines[row - 1][:col].strip():
+                    out[row] = tok.string.lstrip("#").strip()
+    except tokenize.TokenError:
+        pass
+    return out
+
+def _field_comments(source):
+    """variable name -> trailing comment on its (last) top-level assignment."""
+    by_line = _trailing_comments(source)
+    res = {}
+    for node in ast.parse(source).body:
+        if isinstance(node, ast.Assign):
+            text = by_line.get(node.end_lineno) or by_line.get(node.lineno)
+            if text:
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        res[t.id] = text
+    return res
 
 def load(source, key):
     modname = "user_script_" + re.sub(r"\\W", "_", key)
@@ -56,6 +83,9 @@ def load(source, key):
                     fk = _kind(fv)
                     if fk:
                         fields.append(_field(f"{name}[{i}].{f.name}", fk, fv))
+    cmts = _field_comments(source)
+    for f in fields:
+        f["comment"] = cmts.get(f["name"], "")
     _mods[key] = mod
     _kinds[key] = {f["name"]: f["kind"] for f in fields}
     return json.dumps(fields)
@@ -134,8 +164,12 @@ function setInput(f, input) {
 function makeInput(f) {
   let input;
   if (f.kind === "bool") input = el("input", { type: "checkbox" });
-  else if (f.kind === "str" || isList(f)) input = el("input", { type: "text" });
+  else if (f.kind === "str" || isList(f)) {
+    input = el("input", { type: "text" });
+    if (isList(f)) input.title = "comma-separated";
+  }
   else input = el("input", { type: "number", step: f.kind === "int" ? "1" : "any" });
+  
   setInput(f, input);
   return input;
 }
@@ -169,7 +203,8 @@ async function buildPanel(tool) {
     }
     inputs[f.name] = input;
     form.append(el("label", { className: "field" },
-      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated)" }) : ""),
+      el("span", {}, f.name,
+        f.comment ? el("small", { textContent: "  (" + f.comment + ")" }) : ""),
       input));
   }
 

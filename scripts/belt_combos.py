@@ -11,15 +11,15 @@ belt_pitch_mm = 5
 
 pulley1_min_teeth = 12
 pulley1_max_teeth = 24
-pulley1_allowable_tooth_counts_manual = [12, 14, 15, 16, 17, 18, 20, 22, 24]  # empty = use min/max
+pulley1_allowable_tooth_counts_manual = [12, 14, 15, 16, 17, 18, 20, 22, 24]  # comma-separated; empty = use min/max
 pulley2_min_teeth = 15
 pulley2_max_teeth = 30
-pulley2_allowable_tooth_counts_manual = [15, 18, 20, 24, 26, 28, 30]  # empty = use min/max
+pulley2_allowable_tooth_counts_manual = [15, 18, 20, 24, 26, 28, 30]  # comma-separated; empty = use min/max
 
 belt_tooth_count_min = 35
 belt_tooth_count_max = 200
 belt_tooth_count_spacing = 5
-belt_allowable_tooth_counts_manual = [95, 100, 105]  # empty = use min/max
+belt_allowable_tooth_counts_manual = [95, 100, 105]  # comma-separated; empty = use min/max/spacing
 
 desired_c2c_min_in = 7.75
 desired_c2c_max_in = 8.25

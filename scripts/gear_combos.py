@@ -6,8 +6,8 @@ from fractions import Fraction
 # ---------------------------------------------------------------------------
 diametral_pitch = 20  # teeth per inch of pitch diameter
 
-gear1_allowable_tooth_counts = [12, 14, 15, 16, 18, 20, 24, 30, 36, 40, 48]
-gear2_allowable_tooth_counts = [15, 18, 20, 24, 30, 36, 40, 48, 60]
+gear1_allowable_tooth_counts = [12, 14, 15, 16, 18, 20, 24, 30, 36, 40, 48]  # comma-separated
+gear2_allowable_tooth_counts = [15, 18, 20, 24, 30, 36, 40, 48, 60]  # comma-separated
 
 # Desired center distance in DP units, i.e. c2c_in * DP = (N1 + N2) / 2.
 # Inclusive on both ends. At DP 20 this is 1.5 - 2.0 in.

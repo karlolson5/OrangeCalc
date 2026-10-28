@@ -50,7 +50,7 @@ chain_c2c_tolerance_tight_in = 0.003
 chain_c2c_tolerance_loose_in = 0.020
 
 # Minimum chain wrap on the smaller sprocket, degrees. 0 disables the check.
-min_wrap_deg = 120
+min_wrap_deg = 120  # min wrap around smaller sprocket
 
 # A set must contain a ratio <= the first and a ratio >= the second.
 # With both at 1, any set passes (a 1:1 config satisfies both).
