@@ -11,18 +11,15 @@ belt_pitch_mm = 5
 
 pulley1_min_teeth = 12
 pulley1_max_teeth = 24
-pulley1_allowable_tooth_counts = range(pulley1_min_teeth, pulley1_max_teeth + 1)
-pulley1_allowable_tooth_counts = [12, 14, 15, 16, 17, 18, 20, 22, 24]
+pulley1_allowable_tooth_counts_manual = [12, 14, 15, 16, 17, 18, 20, 22, 24]  # empty = use min/max
 pulley2_min_teeth = 15
 pulley2_max_teeth = 30
-pulley2_allowable_tooth_counts = range(pulley2_min_teeth, pulley2_max_teeth + 1)
-pulley2_allowable_tooth_counts = [15, 18, 20, 24, 26, 28, 30]
+pulley2_allowable_tooth_counts_manual = [15, 18, 20, 24, 26, 28, 30]  # empty = use min/max
 
 belt_tooth_count_min = 35
 belt_tooth_count_max = 200
 belt_tooth_count_spacing = 5
-belt_allowable_tooth_counts = range(belt_tooth_count_min, belt_tooth_count_max + 1, belt_tooth_count_spacing)
-belt_allowable_tooth_counts = [95, 100, 105]
+belt_allowable_tooth_counts_manual = [95, 100, 105]  # empty = use min/max
 
 desired_c2c_min_in = 7.75
 desired_c2c_max_in = 8.25
@@ -131,15 +128,24 @@ def calculate_c2c_in(belt_teeth: int, pulley1_teeth: int, pulley2_teeth: int) ->
     c = _c2c_mm(belt_teeth, pulley1_teeth, pulley2_teeth)
     return None if c is None else c / MM_PER_IN
 
+def _pulley1_counts():
+    return pulley1_allowable_tooth_counts_manual or range(pulley1_min_teeth, pulley1_max_teeth + 1)
+
+def _pulley2_counts():
+    return pulley2_allowable_tooth_counts_manual or range(pulley2_min_teeth, pulley2_max_teeth + 1)
+
+def _belt_counts():
+    return belt_allowable_tooth_counts_manual or range(
+        belt_tooth_count_min, belt_tooth_count_max + 1, belt_tooth_count_spacing)
 
 # ---------------------------------------------------------------------------
 # Search
 # ---------------------------------------------------------------------------
 def find_legal_configurations() -> list[Configuration]:
     configs = []
-    for p1t in pulley1_allowable_tooth_counts:
-        for p2t in pulley2_allowable_tooth_counts:
-            for bt in belt_allowable_tooth_counts:
+    for p1t in _pulley1_counts():
+        for p2t in _pulley2_counts():
+            for bt in _belt_counts():
                 c2c = calculate_c2c_in(bt, p1t, p2t)
                 if c2c is not None and desired_c2c_min_in < c2c < desired_c2c_max_in:
                     configs.append(Configuration(p1t, p2t, bt, c2c))

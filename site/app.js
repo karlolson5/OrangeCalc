@@ -25,7 +25,7 @@ def _kind(v):
     if isinstance(v, int): return "int"
     if isinstance(v, float): return "float"
     if isinstance(v, str): return "str"
-    if isinstance(v, (list, tuple)) and v and all(_is_num(x) for x in v):
+    if isinstance(v, (list, tuple)) and all(_is_num(x) for x in v):
         return "list_int" if all(isinstance(x, int) for x in v) else "list_float"
     return None
 
@@ -121,7 +121,6 @@ function parseField(f, input) {
   };
   if (isList(f)) {
     const parts = raw.split(",").map(s => s.trim()).filter(s => s !== "");
-    if (!parts.length) throw new Error(`${f.name}: list is empty`);
     return parts.map(parseOne);
   }
   return parseOne(raw.trim());
@@ -170,7 +169,7 @@ async function buildPanel(tool) {
     }
     inputs[f.name] = input;
     form.append(el("label", { className: "field" },
-      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated)" }) : ""),
+      el("span", {}, f.name, isList(f) ? el("small", { textContent: "  (comma-separated; empty = use min/max)" }) : ""),
       input));
   }
 
