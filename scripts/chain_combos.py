@@ -171,7 +171,7 @@ def calculate_wrap_deg(chain: ChainSpec, c2c_in: float, n1: int, n2: int) -> flo
 # ---------------------------------------------------------------------------
 def find_legal_configurations() -> list[Configuration]:
     configs = []
-    for chain in [c in chains if c.name in allowed_chain_types]:
+    for chain in [c for c in chains if c.name in allowed_chain_types]:
         for n1 in chain.sprocket1_allowable_tooth_counts:
             for n2 in chain.sprocket2_allowable_tooth_counts:
                 for links in chain.link_counts:
